@@ -372,7 +372,7 @@ const F=(k,label,cls,extra="")=>`<label class="ff ${cls}"><input data-k="${k}" p
 function showData(){
   view="data";const d=draft,ent=d.mode==="entrega";
   pane.innerHTML=head("Seus dados","",2)+`<div class="cb">
-  <div class="tiles" id="tiles"><button type="button" class="tile" data-mode="entrega" aria-pressed="${ent}"><b>🚚 Entrega</b><small>Taxa ${brl(CFG.TAXA)} em ${esc(CFG.CIDADE)}</small></button><button type="button" class="tile" data-mode="retirada" aria-pressed="${d.mode==="retirada"}"><b>🛍️ Retirada</b><small>Na loja, sem taxa</small></button></div>
+  <div class="tiles" id="tiles"><button type="button" class="tile" data-mode="entrega" aria-pressed="${ent}"><b>🚚 Entrega</b><small>Sujeito a taxa de entrega</small></button><button type="button" class="tile" data-mode="retirada" aria-pressed="${d.mode==="retirada"}"><b>🛍️ Retirada</b><small>Na loja, sem taxa</small></button></div>
   <div class="sec">Quem faz o pedido</div>
   <div class="fg">${F("nome","Seu nome *","c3",'autocomplete="name"')}${F("tel","Telefone *","c3",'type="tel" inputmode="tel" autocomplete="tel"')}</div>
   <div class="dl" id="dl" ${ent?"":"hidden"}>
@@ -449,6 +449,58 @@ async function load(){
 }
 saveCart();load();
 
+/* flores realistas em SVG (sem filtros, só degradês e camadas — leve para animar) */
+function floraDefs(){
+  const mkR=s=>()=>(s=(s*16807)%2147483647)/2147483647;
+  const PALS={a:["#f2525f","#d9233a","#a01026","#560514"],b:["#e63f52","#c01530","#8a0b20","#48030f"],c:["#f55f6b","#e02c43","#ac132c","#5e0616"]};
+  let out="";
+  const grads=(id,p)=>`<radialGradient id="${id}g0" cx=".5" cy="1" r="1.05"><stop offset="0" stop-color="${p[3]}"/><stop offset=".4" stop-color="${p[2]}"/><stop offset=".78" stop-color="${p[1]}"/><stop offset="1" stop-color="${p[0]}"/></radialGradient>
+<radialGradient id="${id}g1" cx=".5" cy="1" r="1.05"><stop offset="0" stop-color="${p[3]}"/><stop offset=".5" stop-color="${p[2]}"/><stop offset="1" stop-color="${p[1]}"/></radialGradient>
+<radialGradient id="${id}g2" cx=".5" cy="1" r="1.05"><stop offset="0" stop-color="#2c0209"/><stop offset=".6" stop-color="${p[3]}"/><stop offset="1" stop-color="${p[2]}"/></radialGradient>`;
+  const PT="M0 4C-25 2-35-22-12-39C-4-44 6-44 13-39C35-22 25 2 0 4Z";
+  /* rosa vista de cima: 5 anéis de pétalas com sombra entre camadas */
+  const roseTop=(id,p,sd)=>{const r=mkR(sd);
+    let s=`<defs>${grads(id,p)}<path id="${id}sh" d="${PT}" fill="rgba(25,0,5,.42)"/>
+<g id="${id}p0"><path d="${PT}" fill="url(#${id}g0)" stroke="rgba(40,0,8,.4)" stroke-width=".6"/><path d="M-17-34C-8-42 8-42 16-34" stroke="rgba(255,150,160,.42)" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M-6-8C-8-20-6-30-2-36M7-8C9-20 7-30 3-36" stroke="rgba(60,0,10,.22)" stroke-width=".8" fill="none"/></g>
+<g id="${id}p1"><path d="${PT}" fill="url(#${id}g1)" stroke="rgba(30,0,6,.45)" stroke-width=".7"/><path d="M-17-34C-8-42 8-42 16-34" stroke="rgba(255,140,155,.45)" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>
+<g id="${id}p2"><path d="${PT}" fill="url(#${id}g2)" stroke="rgba(20,0,4,.5)" stroke-width="1"/><path d="M-17-34C-8-42 8-42 16-34" stroke="rgba(255,120,135,.4)" stroke-width="2" fill="none" stroke-linecap="round"/></g></defs>
+<symbol id="${id}" viewBox="-46 -46 92 92">`;
+    [[7,1,0,0],[6,.82,25,0],[5,.64,40,1],[4,.47,12,1],[4,.33,50,2],[3,.2,20,2]].forEach(([n,sc,a0,g])=>{
+      for(let i=0;i<n;i++){const ang=a0+i*360/n+(r()-.5)*16,k=sc*(.93+r()*.14);
+        s+=`<g transform="rotate(${ang.toFixed(1)}) scale(${k.toFixed(3)})"><use href="#${id}sh" transform="translate(0,3) scale(1.05)"/><use href="#${id}p${g}"/></g>`}});
+    s+=`<path d="M0-2C5-2 6 3 1 5C-5 7-8 0-4-5C1-10 9-6 9 1" fill="none" stroke="${p[3]}" stroke-width="1.6" stroke-linecap="round" opacity=".9"/><ellipse cx="-13" cy="-19" rx="13" ry="6.5" fill="#fff" opacity=".12" transform="rotate(-35 -13 -19)"/></symbol>`;
+    return s};
+  /* rosa em 3/4: copo de pétalas por baixo + roseta achatada em cima + sépalas verdes */
+  const roseSide=(id,p,top)=>`<defs>
+<linearGradient id="${id}b" x1="0" y1="0" x2="1" y2=".8"><stop offset="0" stop-color="${p[1]}"/><stop offset=".55" stop-color="${p[2]}"/><stop offset="1" stop-color="${p[3]}"/></linearGradient>
+<linearGradient id="${id}b2" x1="1" y1="0" x2="0" y2=".8"><stop offset="0" stop-color="${p[2]}"/><stop offset=".7" stop-color="${p[3]}"/><stop offset="1" stop-color="#2c0209"/></linearGradient>
+<linearGradient id="${id}k" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#27401c"/><stop offset="1" stop-color="#7f9d5c"/></linearGradient></defs>
+<symbol id="${id}" viewBox="-46 -46 92 112">
+<path d="M0 46L0 64" stroke="#3f5f2a" stroke-width="4" stroke-linecap="round"/>
+<path d="M-37-8C-42 18-23 42 0 47C23 42 42 18 37-8Z" fill="url(#${id}b2)" stroke="rgba(25,0,5,.55)" stroke-width=".8"/>
+<path d="M-36-4C-40 18-22 41 1 46C-9 30-12 14-22-2C-27-8-34-9-36-4Z" fill="url(#${id}b)" stroke="rgba(25,0,5,.55)" stroke-width=".8"/>
+<path d="M-24 4C-14 14-6 26 0 44C8 28 18 14 30 6" fill="none" stroke="rgba(30,0,6,.4)" stroke-width="1.1"/>
+<path d="M-32-2C-26-8-14-6-8 0" fill="none" stroke="rgba(255,150,160,.35)" stroke-width="1.3" stroke-linecap="round"/>
+<use href="#${top}" x="-41" y="-41" width="82" height="82" transform="translate(0,-12) scale(1,.62)"/>
+<path d="M-38-14C-30-3-12 0 0-1C12 0 30-3 38-14" fill="none" stroke="rgba(255,170,180,.4)" stroke-width="1.4" stroke-linecap="round"/>
+<ellipse cx="-16" cy="12" rx="6" ry="14" fill="#fff" opacity=".14" transform="rotate(22 -16 12)"/>
+${[-74,-38,0,38,74].map(a=>`<path d="M0 45C-7 51-9 60 0 68C9 60 7 51 0 45Z" fill="url(#${id}k)" stroke="#1d3012" stroke-width=".6" transform="rotate(${a} 0 45)"/>`).join("")}
+</symbol>`;
+  out+=roseTop("rtA",PALS.a,3)+roseTop("rtB",PALS.b,17)+roseTop("rtC",PALS.c,29)+roseSide("rsA",PALS.a,"rtA")+roseSide("rsB",PALS.b,"rtB")+roseSide("rsC",PALS.c,"rtC");
+  /* pétalas curvas com veludo */
+  const petal=(id,d,vein)=>`<symbol id="${id}" viewBox="-30 -34 60 68"><path d="${d}" style="fill:var(--p)"/><path d="${d}" fill="url(#gPet)"/><path d="${d}" fill="url(#gPetS)" opacity=".9"/><path d="${vein}" stroke="rgba(0,0,0,.18)" stroke-width=".8" fill="none"/><path d="M-14-20C-6-27 6-27 14-20" stroke="rgba(255,190,198,.5)" stroke-width="1.6" fill="none" stroke-linecap="round"/></symbol>`;
+  out+=`<defs><radialGradient id="gPetS" cx=".3" cy=".25" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>`;
+  out+=petal("petal","M0-27C14-29 25-14 21 4C18 18 8 28 0 29C-8 28-18 18-21 4C-25-14-14-29 0-27Z","M0 24V-18M0 6L-9-6M0 6L9-6")
+     +petal("petalB","M-4-28C14-30 27-12 20 8C15 22 6 28-3 29C-14 27-24 14-23-2C-23-16-15-26-4-28Z","M-2 25C-2 8-3-8-3-22")
+     +petal("petalC","M2-28C18-26 24-8 17 12C12 24 4 30-2 28C-14 24-22 8-20-6C-18-20-8-30 2-28Z","M0 25C2 6 2-8 2-22");
+  /* folha serrilhada com nervuras */
+  const leafPts=(len,wd,teeth)=>{let L=[],Rr=[];for(let i=0;i<=teeth;i++){const t=i/teeth,w=Math.pow(Math.sin(Math.PI*Math.min(1,t*.97+.015)),.75)*wd*(1-.15*t),tooth=(i%2?1:0)*1.8,y=-t*len;L.push([-(w+tooth),y]);Rr.push([w+tooth,y])}return[...L,...Rr.reverse()].map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join("")+"Z"};
+  const LP=leafPts(68,14,24),veins=[10,22,34,46,57].map(y=>`M0 -${y}L-9 -${y+8}M0 -${y}L9 -${y+8}`).join("");
+  out+=`<defs><linearGradient id="gLeaf" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#27401c"/><stop offset=".55" stop-color="#4d7236"/><stop offset="1" stop-color="#8fae67"/></linearGradient></defs>
+<g id="leaf"><path d="${LP}" fill="url(#gLeaf)" stroke="#1d3012" stroke-width=".7" stroke-linejoin="round"/><path d="M0 0V-62M${veins}" stroke="#d6eab4" stroke-opacity=".42" stroke-width=".7" fill="none"/></g>
+<symbol id="leafS" viewBox="-20 -72 40 76"><use href="#leaf"/></symbol>`;
+  return out}
+
 /* abertura 2,5 s: buquê aparece, treme, EXPLODE (tela treme) e espalha flores por todos os lados */
 (function(){
   const boom=document.getElementById("boom"),D=document.getElementById("fdefs");
@@ -456,30 +508,16 @@ saveCart();load();
   if(matchMedia("(prefers-reduced-motion:reduce)").matches){boom.remove();return}
   document.body.classList.add("lock");
   let seed=11;const R=()=>(seed=(seed*16807)%2147483647)/2147483647,rr=(a,b)=>a+R()*(b-a);
-  const sty=o=>Object.entries(o).map(([k,v])=>`--${k}:${v}`).join(";");
-  const ROSES=[{r1:"#e3263c",r2:"#bb132b",r3:"#8b0b1e",r4:"#4d0411"},{r1:"#c9142d",r2:"#a00c21",r3:"#730717",r4:"#400210"},{r1:"#f2485c",r2:"#d31e39",r3:"#a50f28",r4:"#5e0618"}];
-  const PET=["#d7122a","#e8283d","#b30d22","#f04458","#c4102a"];
-  const rep=(id,angs,tr="")=>angs.map(a=>`<use href="#${id}" transform="rotate(${a})"/>`).join("");
-  const PD="M0 2C-22 0-30-24-10-38C-3-42 5-42 11-38C30-24 22 0 0 2Z";
+    const PET=["#d7122a","#e8283d","#b30d22","#f04458","#c4102a","#9d0b1f"];
   const shard=(i,pts,cr)=>`<symbol id="sh${i}" viewBox="0 0 100 100"><polygon points="${pts}" fill="url(#${i%2?"gK2":"gK1"})" stroke="#74501f" stroke-width="1.2" stroke-linejoin="round"/><path d="${cr}" stroke="rgba(80,48,16,.4)" stroke-width="1" fill="none"/><polygon points="${pts}" fill="#fff" opacity=".1" transform="translate(-3 -3) scale(.9)"/></symbol>`;
   D.innerHTML=`<defs>
 <linearGradient id="gPet" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset=".5" stop-color="#000" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity=".22"/></linearGradient>
-<linearGradient id="gLeaf" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#2b4420"/><stop offset="1" stop-color="#8aa866"/></linearGradient>
 <linearGradient id="gK1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efcd98"/><stop offset="1" stop-color="#b98a52"/></linearGradient>
 <linearGradient id="gK2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dcb279"/><stop offset="1" stop-color="#946a3a"/></linearGradient>
 <linearGradient id="gRib" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f02c38"/><stop offset="1" stop-color="#8d0b15"/></linearGradient>
-<g id="rp"><path d="${PD}"/><path d="${PD}" fill="url(#gPet)" stroke="none"/></g>
-<g id="leaf"><path d="M0 0C-15-16-13-46 0-68C13-46 15-16 0 0Z" fill="url(#gLeaf)" stroke="#1f3316" stroke-width=".8"/><path d="M0 0V-60" stroke="#d3e8b0" stroke-opacity=".45" stroke-width=".8" fill="none"/></g>
 </defs>
-<symbol id="rose" viewBox="-44 -44 88 88">
-<g style="fill:var(--r1);stroke:rgba(60,0,10,.4);stroke-width:.7">${rep("rp",[0,72,144,216,288])}</g>
-<g style="fill:var(--r2);stroke:rgba(60,0,10,.42);stroke-width:.8" transform="rotate(36) scale(.76)">${rep("rp",[0,72,144,216,288])}</g>
-<g style="fill:var(--r3);stroke:rgba(40,0,8,.45);stroke-width:1" transform="rotate(10) scale(.52)">${rep("rp",[0,90,180,270])}</g>
-<path d="M0 -3C5 -3 6 3 1 5C-5 7-8 0-4-5C1-10 9-6 9 1" fill="none" style="stroke:var(--r4)" stroke-width="1.5" stroke-linecap="round" stroke-opacity=".85"/>
-<ellipse cx="-12" cy="-18" rx="12" ry="6" fill="#fff" opacity=".14" transform="rotate(-35 -12 -18)"/></symbol>
 <symbol id="gyp" viewBox="-10 -10 20 20"><g fill="#fff" stroke="rgba(0,0,0,.14)" stroke-width=".4">${[0,72,144,216,288].map(a=>`<ellipse cx="0" cy="-5" rx="2.7" ry="4.6" transform="rotate(${a})"/>`).join("")}</g><circle r="2" fill="#f2b630"/></symbol>
-<symbol id="petal" viewBox="-20 -30 40 60"><path d="M0 -28C15 -22 19 0 6 22C3 27 -3 27 -6 22C-19 0 -15 -22 0 -28Z" style="fill:var(--p)"/><path d="M0 -28C15 -22 19 0 6 22C3 27 -3 27 -6 22C-19 0 -15 -22 0 -28Z" fill="url(#gPet)"/><path d="M0 -22V20" stroke="rgba(0,0,0,.14)" stroke-width=".8" fill="none"/></symbol>
-<symbol id="leafS" viewBox="-20 -40 40 80"><path d="M0 -38C14 -24 16 8 0 38C-16 8 -14 -24 0 -38Z" fill="url(#gLeaf)" stroke="#1f3316" stroke-width=".8"/><path d="M0 -34V34" stroke="#d3e8b0" stroke-opacity=".4" stroke-width=".8" fill="none"/></symbol>
+${floraDefs()}
 ${shard(0,"8,62 40,6 92,30 72,96 22,88","M40 6L52 60L22 88M52 60L92 30")}${shard(1,"14,20 78,8 96,58 52,94 6,70","M78 8L50 50L6 70M50 50L96 58")}${shard(2,"30,6 94,44 60,96 10,74","M30 6L55 55L10 74M55 55L94 44")}${shard(3,"8,62 40,6 92,30 72,96 22,88","M22 88L48 48L92 30")}${shard(4,"14,20 78,8 96,58 52,94 6,70","M14 20L52 52L52 94")}${shard(5,"30,6 94,44 60,96 10,74","M30 6L50 50L60 96")}`;
 
   /* buquê: papel kraft, rosas vermelhas, flores brancas, folhas e laço vermelho */
@@ -492,8 +530,11 @@ ${shard(0,"8,62 40,6 92,30 72,96 22,88","M40 6L52 60L22 88M52 60L92 30")}${shard
   [[58,112],[246,104],[112,52],[194,48],[150,22],[34,206],[268,200],[84,36],[222,40]].forEach(([cx,cy])=>{
     o+=`<path d="M150 296Q${(150+cx)/2} ${(296+cy)/2-12} ${cx} ${cy}" stroke="#6f9a52" stroke-width="1.3" fill="none"/>`;
     for(let i=0;i<8;i++){const a=R()*6.28,r=R()*15,s=11+R()*8;o+=`<use href="#gyp" x="${cx+Math.cos(a)*r-s/2}" y="${cy+Math.sin(a)*r-s/2}" width="${s}" height="${s}"/>`}});
-  [[150,98,80,0,0],[86,158,74,24,1],[214,154,72,-18,2],[150,196,92,8,0],[98,246,62,40,1],[204,248,60,-32,2]].forEach(([x,y,s,r,v],i)=>{
-    o+=`<path d="M${x} ${y}Q${(x+150)/2} ${(y+300)/2} 150 306" stroke="#4b6b33" stroke-width="3.6" fill="none" stroke-linecap="round"/>`+head("rose",x,y,s,r,sty(ROSES[v]))});
+  const TIE=[150,306],sideRose=(id,x,y,s)=>{const sc=s/92,th=Math.atan2(x-TIE[0],TIE[1]-y),deg=th*180/Math.PI,d=62*sc,bx=x-d*Math.sin(th),by=y+d*Math.cos(th);
+    return `<path d="M${bx.toFixed(1)} ${by.toFixed(1)}Q${((bx+TIE[0])/2).toFixed(1)} ${((by+TIE[1])/2).toFixed(1)} ${TIE[0]} ${TIE[1]}" stroke="#4b6b33" stroke-width="3.6" fill="none" stroke-linecap="round"/><g class="hd"><use href="#${id}" x="${x-46*sc}" y="${y-46*sc}" width="${92*sc}" height="${112*sc}" transform="rotate(${deg.toFixed(1)} ${x} ${y})"/></g>`};
+  o+=sideRose("rsA",150,92,76)+sideRose("rsB",84,142,72)+sideRose("rsC",216,138,72)+sideRose("rsA",50,214,58)+sideRose("rsB",250,208,56);
+  [["rtA",150,198,92,8],["rtB",102,244,60,30],["rtC",200,246,58,-26]].forEach(([id,x,y,s,r])=>{
+    o+=`<path d="M${x} ${y}Q${(x+150)/2} ${(y+306)/2} 150 306" stroke="#4b6b33" stroke-width="3.6" fill="none" stroke-linecap="round"/>`+head(id,x,y,s,r,"")});
   o+=poly("150,350 66,228 150,258","gK1")+poly("150,350 234,228 150,258","gK2")+poly("150,350 110,236 150,262","gK1")+poly("150,350 190,236 150,262","gK2");
   o+=`<path d="M150 258V350M108 238L150 340M192 238L150 340" stroke="rgba(80,48,16,.35)" stroke-width="1" fill="none"/>`;
   for(let i=0;i<10;i++){const dx=(i-4.5)*3.3;o+=`<path d="M${150+dx*.4} 346L${150+dx} 414" stroke="#6a8a46" stroke-width="3.2" stroke-linecap="round"/>`}
@@ -518,9 +559,9 @@ ${shard(0,"8,62 40,6 92,30 72,96 22,88","M40 6L52 60L22 88M52 60L92 30")}${shard
     bq.style.visibility="hidden";
     boom.querySelector(".flash").animate([{opacity:1},{opacity:0}],{duration:420,easing:"ease-out"});
     const W=innerWidth,H=innerHeight,Rr=Math.hypot(W,H)*.62,add=(el,near)=>{fx.append(el);fly(el,W,H,Rr,900,near)};
-    for(let i=0;i<13;i++){const s=48+R()*70;add(mk("rose",sty(ROSES[i%3]),s,s>100),s>100)}
+    const RS=["rsA","rsB","rsC","rtA","rtB","rtC"];for(let i=0;i<14;i++){const s=52+R()*72;add(mk(RS[i%6],"",s,s>108),s>108)}
     for(let i=0;i<14;i++){const s=36+R()*60;add(mk("sh"+(i%6),"",s,s>80),s>80)}
-    for(let i=0;i<40;i++){const s=18+R()*(i%5?36:100);add(mk("petal","--p:"+PET[i%5],s,s>80),s>80)}
+    for(let i=0;i<40;i++){const s=18+R()*(i%5?36:100);add(mk(["petal","petalB","petalC"][i%3],"--p:"+PET[i%6],s,s>80),s>80)}
     for(let i=0;i<14;i++){const s=28+R()*40;add(mk("leafS","",s,false),false)}
     for(let i=0;i<26;i++){const s=14+R()*22;add(mk("gyp","",s,false),false)}
     shake([bq,glow,fx],38,760);
@@ -528,7 +569,7 @@ ${shard(0,"8,62 40,6 92,30 72,96 22,88","M40 6L52 60L22 88M52 60L92 30")}${shard
     /* chuva de pétalas por cima do site */
     const rain=document.createElement("div");rain.id="rain";document.body.append(rain);
     for(let i=0;i<34;i++){const s=16+R()*24,d=document.createElement("div");d.className="pt";d.style.cssText=`--s:${s}px;left:${R()*W}px`;
-      d.innerHTML=`<svg width="100%" height="100%" viewBox="0 0 100 100"><use href="#petal" width="100" height="100" style="--p:${PET[i%5]}"/></svg>`;rain.append(d);
+      d.innerHTML=`<svg width="100%" height="100%" viewBox="0 0 100 100"><use href="#${["petal","petalB","petalC"][i%3]}" width="100" height="100" style="--p:${PET[i%6]}"/></svg>`;rain.append(d);
       const sw=30+R()*60,r=(R()-.5)*700;d.animate([{transform:"translate(0,0) rotate(0)"},{transform:`translate(${sw}px,${H*.35}px) rotate(${r*.4}deg)`},{transform:`translate(${-sw}px,${H*.7}px) rotate(${r*.7}deg)`},{transform:`translate(${sw*.5}px,${H+80}px) rotate(${r}deg)`}],{duration:1700+R()*1100,delay:100+R()*800,easing:"ease-in",fill:"forwards"})}
     setTimeout(()=>rain.remove(),4600);
   },800);
